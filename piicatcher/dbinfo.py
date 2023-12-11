@@ -78,6 +78,18 @@ class Postgres(DbInfo):
             num_rows=num_rows,
         )
 
+class MSSQL(DbInfo):
+    _sample_query_template = "SELECT TOP {num_rows} {column_list} FROM {schema_name}.{table_name}"
+
+    _column_escape = "["
+
+    def get_sample_query(self, column_list, num_rows) -> str:
+        return self._sample_query_template.format(
+            column_list="[{}]".format("],[ ".join(col for col in column_list)),
+            schema_name=self.schema_name,
+            table_name=self.table_name,
+            num_rows=num_rows,
+        )
 
 class Redshift(Postgres):
     _sample_query_template = "SELECT {column_list} FROM {schema_name}.{table_name} ORDER BY RANDOM() LIMIT {num_rows}"
@@ -161,4 +173,6 @@ def get_dbinfo(source_type: str, *args, **kwargs) -> DbInfo:
         return Athena(*args, **kwargs)
     elif source_type == "bigquery":
         return BigQuery(*args, **kwargs)
+    elif source_type == "mssql":
+        return MSSQL(*args, **kwargs)
     raise AttributeError
